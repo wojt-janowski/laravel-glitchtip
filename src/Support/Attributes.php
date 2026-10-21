@@ -138,6 +138,34 @@ final readonly class Attributes
     }
 
     /**
+     * Map a nested object, or return null when it is absent.
+     *
+     * @template T
+     *
+     * @param  callable(array<string, mixed>): T  $map
+     * @return T|null
+     */
+    public function map(string $key, callable $map): mixed
+    {
+        $object = $this->nullableObject($key);
+
+        return $object === null ? null : $map($object);
+    }
+
+    /**
+     * Map each object in a nested list.
+     *
+     * @template T
+     *
+     * @param  callable(array<string, mixed>): T  $map
+     * @return list<T>
+     */
+    public function mapEach(string $key, callable $map): array
+    {
+        return array_map($map, $this->objects($key));
+    }
+
+    /**
      * @template TEnum of \BackedEnum
      *
      * @param  class-string<TEnum>  $enum

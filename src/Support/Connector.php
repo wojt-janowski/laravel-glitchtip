@@ -63,7 +63,18 @@ final readonly class Connector
     }
 
     /**
-     * @param  array<string, mixed>  $body
+     * A GET to an endpoint that needs no token, such as the instance settings.
+     * The token is still sent when one is configured.
+     *
+     * @param  array<string, mixed>  $query
+     */
+    public function getPublic(string $path, array $query = []): Response
+    {
+        return $this->send('GET', $path, $query, authenticate: false);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $body  an object, or a list for endpoints that take a JSON array
      * @param  array<string, mixed>  $query
      */
     public function post(string $path, array $body = [], array $query = []): Response
@@ -72,7 +83,34 @@ final readonly class Connector
     }
 
     /**
-     * @param  array<string, mixed>  $body
+     * A POST to an endpoint that needs no token, such as a heartbeat.
+     *
+     * @param  array<array-key, mixed>  $body
+     */
+    public function postPublic(string $path, array $body = []): Response
+    {
+        return $this->send('POST', $path, [], $body, authenticate: false);
+    }
+
+    /**
+     * POST files as multipart/form-data, all under one field name.
+     *
+     * @param  list<array{contents: string, filename: string}>  $files
+     */
+    public function postFiles(string $path, string $field, array $files): Response
+    {
+        // Not asJson(): its Content-Type header would override the multipart boundary.
+        $request = $this->request('POST', json: false);
+
+        foreach ($files as $file) {
+            $request->attach($field, $file['contents'], $file['filename']);
+        }
+
+        return $this->verify('POST', $path, $request->post($this->uri($path)));
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $body
      * @param  array<string, mixed>  $query
      */
     public function put(string $path, array $body = [], array $query = []): Response
@@ -82,27 +120,45 @@ final readonly class Connector
 
     /**
      * @param  array<string, mixed>  $query
+     * @param  array<array-key, mixed>|null  $body  for the few DELETEs that take one
      */
-    public function delete(string $path, array $query = []): Response
+    public function delete(string $path, array $query = [], ?array $body = null): Response
     {
-        return $this->send('DELETE', $path, $query);
+        return $this->send('DELETE', $path, $query, $body);
     }
 
     /**
      * @param  array<string, mixed>  $query
-     * @param  array<string, mixed>|null  $body
+     * @param  array<array-key, mixed>|null  $body
      */
-    private function send(string $method, string $path, array $query = [], ?array $body = null): Response
+    private function send(string $method, string $path, array $query = [], ?array $body = null, bool $authenticate = true): Response
+    {
+        $options = match (true) {
+            $body === null => [],
+            // An empty body must still be a JSON object, not [].
+            $body !== [] && array_is_list($body) => ['json' => $body],
+            default => ['json' => (object) $body],
+        };
+
+        $response = $this->request($method, $authenticate)->send($method, $this->uri($path, $query), $options);
+
+        return $this->verify($method, $path, $response);
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     */
+    private function uri(string $path, array $query = []): string
     {
         $queryString = Query::build($query);
         // Paths are relative to /api/0/ unless they name another API root, like /api/settings/.
         $base = str_starts_with($path, '/api/') ? $path : '/api/0/'.ltrim($path, '/');
-        $uri = $base.($queryString === '' ? '' : '?'.$queryString);
 
-        $options = $body === null ? [] : ['json' => (object) $body];
+        return $base.($queryString === '' ? '' : '?'.$queryString);
+    }
 
-        $response = $this->request($method)->send($method, $uri, $options);
-
+    private function verify(string $method, string $path, Response $response): Response
+    {
         if ($response->failed()) {
             throw RequestFailedException::fromResponse($method, '/'.ltrim($path, '/'), $response);
         }
@@ -110,19 +166,27 @@ final readonly class Connector
         return $response;
     }
 
-    private function request(string $method): PendingRequest
+    private function request(string $method, bool $authenticate = true, bool $json = true): PendingRequest
     {
-        if ($this->token === null || $this->token === '') {
+        $hasToken = $this->token !== null && $this->token !== '';
+
+        if ($authenticate && ! $hasToken) {
             throw MissingConfigurationException::token();
         }
 
         $request = $this->http
             ->baseUrl(rtrim($this->url, '/'))
-            ->withToken($this->token)
             ->acceptJson()
-            ->asJson()
             ->timeout($this->timeout)
             ->connectTimeout($this->connectTimeout);
+
+        if ($json) {
+            $request->asJson();
+        }
+
+        if ($hasToken) {
+            $request->withToken((string) $this->token);
+        }
 
         // POSTs create things, so retrying one could duplicate it.
         if ($method !== 'POST' && $this->retryTimes > 0) {
