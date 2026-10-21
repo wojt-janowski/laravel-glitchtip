@@ -108,6 +108,10 @@ final readonly class Projects extends Resource
         )));
     }
 
+    /**
+     * GlitchTip 6.2 accepts this request but does not save the changes; it
+     * returns the key as it was.
+     */
     public function updateKey(string $project, string $key, ?string $name = null, ?int $rateLimitWindow = null, ?int $rateLimitCount = null): ProjectKey
     {
         return ProjectKey::fromArray(self::object($this->connector->put(

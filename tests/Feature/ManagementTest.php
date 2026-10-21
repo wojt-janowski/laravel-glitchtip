@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Http;
 use WojtJanowski\GlitchTip\Data\Commit;
 use WojtJanowski\GlitchTip\Data\IssueFilter;
 use WojtJanowski\GlitchTip\Data\IssueUpdate;
+use WojtJanowski\GlitchTip\Data\MonitorInput;
 use WojtJanowski\GlitchTip\Data\UserOptions;
 use WojtJanowski\GlitchTip\Enums\IssueStatus;
 use WojtJanowski\GlitchTip\Enums\MemberRole;
+use WojtJanowski\GlitchTip\Enums\MonitorType;
 use WojtJanowski\GlitchTip\Enums\StatsCategory;
 use WojtJanowski\GlitchTip\Enums\StatsInterval;
 use WojtJanowski\GlitchTip\Exceptions\MissingConfigurationException;
@@ -182,18 +184,30 @@ describe('request bodies', function (): void {
         Http::assertSent(fn (Request $request): bool => $request->url() === 'https://glitchtip.test/api/0/projects/acme/backend/issues/?status=ignored');
     });
 
-    it('keeps the user name unless a new one is given', function (): void {
-        Http::fake(['*' => Http::response([])]);
+    it('sends the current user name back unless a new one is given', function (): void {
+        Http::fake(['*' => Http::response(['id' => '1', 'email' => 'wojt@example.com', 'username' => 'wojt@example.com', 'name' => 'Wojt', 'dateJoined' => '2026-10-18T00:00:00Z', 'hasPasswordAuth' => true, 'options' => []])]);
 
         GlitchTip::users()->update(new UserOptions(timezone: 'UTC'));
+        GlitchTip::users()->update(new UserOptions(timezone: 'UTC'), 'Wojt J');
 
-        Http::assertSent(fn (Request $request): bool => ! array_key_exists('name', $request->data())
-            && $request['options']['timezone'] === 'UTC');
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT' && $request['name'] === 'Wojt' && $request['options']['timezone'] === 'UTC');
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT' && $request['name'] === 'Wojt J');
+        Http::assertSentCount(3);
     });
 
     it('refuses to delete no hashes', function (): void {
         GlitchTip::issues()->deleteHashes(42, []);
     })->throws(InvalidArgumentException::class);
+});
+
+describe('monitors', function (): void {
+    it('sends an empty url for monitors without one', function (): void {
+        Http::fake(['*' => Http::response([])]);
+
+        GlitchTip::monitors()->update(5, new MonitorInput(name: 'Nightly', type: MonitorType::Heartbeat, expectedStatus: null));
+
+        Http::assertSent(fn (Request $request): bool => $request['url'] === '');
+    });
 });
 
 describe('responses', function (): void {
