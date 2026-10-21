@@ -6,6 +6,8 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0-RC2] - 2026-10-21
+
 ### Added
 
 - `GlitchTip::using($url, $token, $organization)` returns a separate client
@@ -30,5 +32,6 @@ All notable changes to this package are documented here. The format follows
 - Retries for idempotent requests on connection failures, 429 and 5xx gateway
   responses.
 
-[Unreleased]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC1...HEAD
+[Unreleased]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC2...HEAD
+[1.0.0-RC2]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC1...v1.0.0-RC2
 [1.0.0-RC1]: https://github.com/wojt-janowski/laravel-glitchtip/releases/tag/v1.0.0-RC1
