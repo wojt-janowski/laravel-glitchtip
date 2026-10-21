@@ -40,10 +40,16 @@ final readonly class SocialApps extends Resource
     }
 
     /**
+     * Edit an OpenID Connect app; GlitchTip doesn't allow editing other providers.
+     *
      * @param  string|null  $clientSecret  null keeps the current secret
+     * @param  string|null  $serverUrl  null keeps the current issuer URL
      */
     public function update(int $app, string $name, string $clientId, ?string $clientSecret = null, ?string $serverUrl = null): OrganizationSocialApp
     {
+        // GlitchTip requires the issuer URL on every update, so look up the current one.
+        $serverUrl ??= collect($this->list())->first(fn (OrganizationSocialApp $existing): bool => $existing->id === $app)?->serverUrl;
+
         return OrganizationSocialApp::fromArray(self::object($this->connector->put($this->path($app), array_filter([
             'name' => $name,
             'clientID' => $clientId,

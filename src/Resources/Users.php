@@ -38,13 +38,14 @@ final readonly class Users extends Resource
      */
     public function update(UserOptions $options, ?string $name = null, int|string $user = 'me'): User
     {
-        $body = ['options' => $options->toArray()];
+        // GlitchTip writes every field it receives and fails (500) when name
+        // is missing or null, so send the current name when none is given.
+        $name ??= $this->get($user)->name ?? '';
 
-        if ($name !== null) {
-            $body['name'] = $name;
-        }
-
-        return User::fromArray(self::object($this->connector->put($this->path($user), $body)));
+        return User::fromArray(self::object($this->connector->put($this->path($user), [
+            'options' => $options->toArray(),
+            'name' => $name,
+        ])));
     }
 
     /**
