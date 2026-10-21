@@ -81,8 +81,9 @@ final readonly class Issues extends Resource
     /**
      * Look up an issue by its short id, e.g. "BACKEND-1A".
      *
-     * Needs a GlitchTip release with the shortids endpoint; older self-hosted
-     * versions answer 404 for every short id.
+     * The shortids endpoint is newer than GlitchTip 6.2.6 (it runs on
+     * app.glitchtip.com but is not yet in a release), so self-hosted 6.2.x
+     * answers 404 for every short id.
      */
     public function findByShortId(string $shortId): Issue
     {

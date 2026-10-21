@@ -12,7 +12,7 @@ describe('CursorPage::parseLinkHeader', function (): void {
         expect(CursorPage::parseLinkHeader($header))->toBe(['next' => 'cD0yMDI2']);
     });
 
-    it('tolerates the set-wrapped header older self-hosted versions send', function (): void {
+    it('tolerates the set-wrapped header self-hosted 6.2.x sends', function (): void {
         $header = "{'<https://glitchtip.test/api/0/organizations/acme/issues/>; rel=\"previous\"; results=\"false\", "
             ."<https://glitchtip.test/api/0/organizations/acme/issues/?cursor=cD0yMDI2>; rel=\"next\"; results=\"true\"; cursor=\"cD0yMDI2\"'}";
 

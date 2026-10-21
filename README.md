@@ -101,7 +101,7 @@ $issues = GlitchTip::issues()->list(
 $issues = GlitchTip::issues()->forProject('backend', query: 'is:unresolved');
 
 $issue = GlitchTip::issues()->get(42);
-$issue = GlitchTip::issues()->findByShortId('BACKEND-1A');   // needs a recent GlitchTip; older self-hosted versions return 404
+$issue = GlitchTip::issues()->findByShortId('BACKEND-1A');   // needs GlitchTip newer than 6.2.6; 404 on self-hosted 6.2.x
 
 GlitchTip::issues()->resolve(42);
 GlitchTip::issues()->ignore(42);
