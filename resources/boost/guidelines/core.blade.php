@@ -53,6 +53,16 @@ GlitchTip::releases()->finalize('api@1.4.0');
 </code-snippet>
 @endverbatim
 
+- For several accounts, build a separate client per account with `using()`. Never change `config('glitchtip.*')` at runtime to switch accounts:
+
+@verbatim
+<code-snippet name="Multiple accounts" lang="php">
+$client = GlitchTip::using($account->url, $account->token, $account->organization);
+
+$client->issues()->list(query: 'is:unresolved');
+</code-snippet>
+@endverbatim
+
 ### Configuration
 
 Set `GLITCHTIP_TOKEN`, `GLITCHTIP_ORGANIZATION` and, for self-hosted installs, `GLITCHTIP_URL`. Publish with `php artisan vendor:publish --tag=glitchtip-config`.

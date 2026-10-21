@@ -12,7 +12,10 @@
 
 - `GlitchTip` is the entry point (singleton, also the `GlitchTip` facade). It
   hands out one resource class per API area and carries the organization slug;
-  `forOrganization()` returns a re-scoped copy.
+  `forOrganization()` returns a re-scoped copy, and `using($url, $token,
+  $organization)` returns a client for another account. Clients are immutable:
+  never add a way to change the singleton's server or token at runtime,
+  because apps read several accounts in one request.
 - `Support\Connector` wraps Laravel's HTTP client: base URL, bearer token,
   JSON, timeouts, retries, and `RequestFailedException` on any non-2xx.
   POSTs are never retried.
