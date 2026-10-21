@@ -315,5 +315,6 @@ it('creates a status page and a repository, which need removing by hand', functi
     expect($page->name)->toBe($run->name('status'))
         ->and($repository->name)->toBe($run->name('repo'));
 
-    fwrite(STDOUT, "\n  Remove by hand: status page \"{$page->name}\" and repository \"{$repository->name}\".\n");
+    $admin = rtrim($run->url, '/').'/admin';
+    fwrite(STDOUT, "\n  Remove by hand in Django admin: status page \"{$page->name}\" ({$admin}/uptime/statuspage/) and repository \"{$repository->name}\" ({$admin}/sourcecode/repository/).\n");
 });
