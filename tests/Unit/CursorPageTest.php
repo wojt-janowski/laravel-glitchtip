@@ -12,6 +12,13 @@ describe('CursorPage::parseLinkHeader', function (): void {
         expect(CursorPage::parseLinkHeader($header))->toBe(['next' => 'cD0yMDI2']);
     });
 
+    it('tolerates the set-wrapped header older self-hosted versions send', function (): void {
+        $header = "{'<https://glitchtip.test/api/0/organizations/acme/issues/>; rel=\"previous\"; results=\"false\", "
+            ."<https://glitchtip.test/api/0/organizations/acme/issues/?cursor=cD0yMDI2>; rel=\"next\"; results=\"true\"; cursor=\"cD0yMDI2\"'}";
+
+        expect(CursorPage::parseLinkHeader($header))->toBe(['next' => 'cD0yMDI2']);
+    });
+
     it('returns no cursors for an empty header', function (): void {
         expect(CursorPage::parseLinkHeader(''))->toBe([]);
     });
