@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: build-${{ github.ref_name }}-${{ hashFiles('composer.json', 'phpstan.neon', 'rector.php', 'pint.json') }}
+          restore-keys: build-
+      - run: composer update --no-interaction --prefer-dist --no-progress
+      - run: vendor/bin/pint --test --cache-file=build/pint/.pint.cache
+      - run: vendor/bin/rector process --dry-run --no-progress-bar
+      - run: vendor/bin/phpstan analyse --no-progress
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stability: [prefer-lowest, prefer-stable]
+    name: tests (${{ matrix.stability }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      - run: composer update --no-interaction --prefer-dist --no-progress --${{ matrix.stability }}
+      - run: vendor/bin/pest --ci
