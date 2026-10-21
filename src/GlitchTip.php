@@ -194,7 +194,7 @@ final readonly class GlitchTip
     }
 
     /**
-     * Stripe billing, on instances with billing enabled.
+     * Event usage, and Stripe billing where it is enabled.
      */
     public function billing(): Billing
     {

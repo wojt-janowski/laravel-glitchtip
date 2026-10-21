@@ -411,13 +411,23 @@ GlitchTip::users()->updateNotifications(subscribeByDefault: false);
 GlitchTip::projects()->updateAlertPreferences([7 => 1, 9 => 0]);   // per project: -1 default, 0 off, 1 on
 ```
 
-### Billing
+### Usage and billing
 
-Billing is available only where Stripe billing is enabled, such as app.glitchtip.com. Self-hosted instances return 404:
+Event usage works on self-hosted instances too. `usage()` needs GlitchTip 6.1.3 or newer, `dailyUsage()` 6.1.4 and `overage()` 6.2.1; older servers answer 404:
+
+```php
+$usage = GlitchTip::billing()->usage();      // this period; usage(periodsAgo: 1) for the last
+$usage->total;
+$usage->transactionEventCount;
+$usage->uptimeCheckEventCount;               // a float: GlitchTip weights uptime and log events
+GlitchTip::billing()->dailyUsage();
+GlitchTip::billing()->overage()->quota;
+```
+
+Plans, subscriptions, checkout and the portal need Stripe billing, as on app.glitchtip.com. Without it, `products()` is empty and `subscription()` returns null:
 
 ```php
 GlitchTip::billing()->subscription()?->status;
-GlitchTip::billing()->usage()->total;
 GlitchTip::billing()->checkout($priceId);     // Stripe Checkout URL
 GlitchTip::billing()->portal();               // Stripe customer portal URL
 GlitchTip::billing()->configureOverage(true, capCents: 5000);
