@@ -503,6 +503,19 @@ composer format
 composer refactor
 ```
 
+### Integration tests
+
+`tests/Integration` runs the client against a real GlitchTip organization. It creates teams, projects, keys, events, releases, uploads, monitors, alerts and SSO apps, all named `it-<timestamp>-<random>`. It deletes each one at the end, even when a test fails, and any cleanup that fails also fails the test. Without these variables, the suite is skipped:
+
+```bash
+GLITCHTIP_INTEGRATION_URL=https://glitchtip.example.com \
+GLITCHTIP_INTEGRATION_TOKEN=... \
+GLITCHTIP_INTEGRATION_ORGANIZATION=acme \
+composer test -- tests/Integration
+```
+
+The token needs write scopes. The suite briefly changes the token user's display options and restores them. It doesn't send notifications or emails. Set `GLITCHTIP_INTEGRATION_UNDELETABLE=1` to also create a status page and a repository; the API can't delete those, so the run prints them for you to remove by hand.
+
 ## License
 
 MIT. See [LICENSE.md](LICENSE.md).

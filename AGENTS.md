@@ -51,6 +51,14 @@
   lookups, the sentry-wizard hash endpoints); use `getPublic()`,
   `postPublic()` or `deletePublic()` for them.
 - User endpoints only act on the token's own user; default to `'me'`.
+- GlitchTip 6.2 quirks found by the live suite, each worked around in the client:
+  - The heartbeat endpoint answers in snake_case (`is_up`, `start_check`).
+  - Updating a monitor with a null `url` returns 500, so send `""`.
+  - `PUT /users/{id}/` writes every field and returns 500 on a missing or null
+    `name`, so send the current name.
+  - Updating an OpenID Connect app requires `serverUrl` every time.
+  - Updating a project key is a no-op on the server.
+  - Instances with registration closed only allow inviting existing users.
 
 ## API Coverage
 
@@ -77,6 +85,10 @@ ingest, browser widgets, no-ops), and give the reason.
 - `composer analyse`: PHPStan level 6
 - `composer format`: Pint
 - `composer refactor`: Rector
+
+`tests/Integration` is an opt-in suite against a real server (see the README);
+it is skipped unless `GLITCHTIP_INTEGRATION_*` is set. Run it after changing
+request bodies or paths, and never commit the token.
 
 Do not run the complete Pest suite for routine local reassurance. Run focused
 and neighbouring test files locally and leave the complete suite to CI.

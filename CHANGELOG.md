@@ -8,6 +8,9 @@ All notable changes to this package are documented here. The format follows
 
 ### Added
 
+- An opt-in live integration suite (`tests/Integration`) that runs create,
+  update and delete scenarios against a real GlitchTip organization and
+  cleans up after itself.
 - `GlitchTip::usingSession($url, $sessionId, $csrfToken, $organization)`
   returns a client that acts as a user signed in to GlitchTip in the
   browser, for apps served from the instance's origin. It sends the
@@ -16,6 +19,16 @@ All notable changes to this package are documented here. The format follows
 
 ### Fixed
 
+- `monitors()->heartbeat()` always reported the monitor as down, because
+  that endpoint answers in snake_case (`is_up`) unlike the rest of the API.
+- `monitors()->update()` failed with a 500 for monitors without a URL, such
+  as heartbeats. A missing URL is now sent as an empty string.
+- `users()->update()` without a name failed with a 500, because GlitchTip
+  writes a missing name as null. The current name is now sent back.
+- `socialApps()->update()` without a `serverUrl` failed with "Server URL is
+  required". It now keeps the app's current issuer URL, as documented.
+- `projects()->updateKey()` is now documented as a no-op on GlitchTip 6.2,
+  which returns the key unchanged.
 - The billing docs said self-hosted instances answer 404. Usage, daily usage
   and overage status work on self-hosted GlitchTip from 6.1.3, 6.1.4 and 6.2.1
   respectively; only the Stripe plan, subscription, checkout and portal calls
