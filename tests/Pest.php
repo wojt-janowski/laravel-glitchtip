@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use WojtJanowski\GlitchTip\Tests\TestCase;
 
-uses(TestCase::class)->in('Unit', 'Feature');
+uses(TestCase::class)->in('Unit', 'Feature', 'Integration');
 
 /**
  * @return array<string, mixed>
