@@ -11,8 +11,11 @@ use WojtJanowski\GlitchTip\Data\DailyUsage;
 use WojtJanowski\GlitchTip\Data\Overage;
 
 /**
- * Stripe billing, on instances with billing enabled (such as app.glitchtip.com).
- * Self-hosted instances answer 404.
+ * Event usage and Stripe billing. Usage, daily usage and overage status work
+ * on self-hosted instances too, from GlitchTip 6.1.3, 6.1.4 and 6.2.1
+ * respectively; older servers answer 404. Plans, subscriptions, checkout and
+ * the portal need Stripe billing (as on app.glitchtip.com); without it there
+ * are no products and no subscription.
  */
 final readonly class Billing extends Resource
 {

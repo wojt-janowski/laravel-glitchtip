@@ -16,6 +16,10 @@ All notable changes to this package are documented here. The format follows
 
 ### Fixed
 
+- The billing docs said self-hosted instances answer 404. Usage, daily usage
+  and overage status work on self-hosted GlitchTip from 6.1.3, 6.1.4 and 6.2.1
+  respectively; only the Stripe plan, subscription, checkout and portal calls
+  need Stripe billing.
 - `stats()->series(interval: StatsInterval::Day)` returned only the first
   hour of each day, because GlitchTip 6.2's stats_v2 does. Daily series are
   now added up from hourly buckets.
