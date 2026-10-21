@@ -7,6 +7,7 @@ namespace WojtJanowski\GlitchTip\Resources;
 use WojtJanowski\GlitchTip\Data\Monitor;
 use WojtJanowski\GlitchTip\Data\MonitorCheck;
 use WojtJanowski\GlitchTip\Data\MonitorInput;
+use WojtJanowski\GlitchTip\Data\StatusPage;
 use WojtJanowski\GlitchTip\Enums\MonitorSort;
 use WojtJanowski\GlitchTip\Support\CursorPage;
 
@@ -60,6 +61,36 @@ final readonly class Monitors extends Resource
             'limit' => $limit,
             'cursor' => $cursor,
         ], MonitorCheck::fromArray(...));
+    }
+
+    /**
+     * Report a heartbeat monitor as up. Needs no token, so it can be called
+     * from cron jobs and workers with only the endpoint id.
+     */
+    public function heartbeat(string $endpoint): MonitorCheck
+    {
+        return MonitorCheck::fromArray(self::object(
+            $this->connector->postPublic("organizations/{$this->organization()}/heartbeat_check/".self::segment($endpoint).'/'),
+        ));
+    }
+
+    /**
+     * @return CursorPage<StatusPage>
+     */
+    public function statusPages(?int $limit = null, ?string $cursor = null): CursorPage
+    {
+        return $this->page("organizations/{$this->organization()}/status-pages/", [
+            'limit' => $limit,
+            'cursor' => $cursor,
+        ], StatusPage::fromArray(...));
+    }
+
+    public function createStatusPage(string $name, bool $public = false): StatusPage
+    {
+        return StatusPage::fromArray(self::object($this->connector->post(
+            "organizations/{$this->organization()}/status-pages/",
+            ['name' => $name, 'isPublic' => $public],
+        )));
     }
 
     private function path(?int $monitor = null): string

@@ -6,6 +6,7 @@ namespace WojtJanowski\GlitchTip\Resources;
 
 use WojtJanowski\GlitchTip\Data\Alert;
 use WojtJanowski\GlitchTip\Data\AlertInput;
+use WojtJanowski\GlitchTip\Data\AlertTestResult;
 use WojtJanowski\GlitchTip\Support\CursorPage;
 
 final readonly class Alerts extends Resource
@@ -37,6 +38,19 @@ final readonly class Alerts extends Resource
     public function delete(string $project, int $alert): void
     {
         $this->connector->delete($this->path($project).$alert.'/');
+    }
+
+    /**
+     * Send a test notification through an alert's recipients, or just one.
+     *
+     * @return list<AlertTestResult>
+     */
+    public function test(string $project, int $alert, ?int $recipient = null): array
+    {
+        return self::listOf(
+            $this->connector->post($this->path($project).$alert.'/test/', [], ['recipient_id' => $recipient]),
+            AlertTestResult::fromArray(...),
+        );
     }
 
     private function path(string $project): string

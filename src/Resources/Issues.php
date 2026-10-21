@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace WojtJanowski\GlitchTip\Resources;
 
 use DateTimeInterface;
+use InvalidArgumentException;
 use WojtJanowski\GlitchTip\Data\Commit;
 use WojtJanowski\GlitchTip\Data\Issue;
 use WojtJanowski\GlitchTip\Data\IssueFilter;
+use WojtJanowski\GlitchTip\Data\IssueHash;
+use WojtJanowski\GlitchTip\Data\IssueStats;
 use WojtJanowski\GlitchTip\Data\IssueTag;
 use WojtJanowski\GlitchTip\Data\IssueUpdate;
 use WojtJanowski\GlitchTip\Data\UserReport;
 use WojtJanowski\GlitchTip\Enums\IssueSort;
+use WojtJanowski\GlitchTip\Enums\IssueStatsPeriod;
+use WojtJanowski\GlitchTip\Enums\IssueStatus;
 use WojtJanowski\GlitchTip\Exceptions\RequestFailedException;
 use WojtJanowski\GlitchTip\Exceptions\UnsupportedByServerException;
 use WojtJanowski\GlitchTip\Support\CursorPage;
@@ -95,7 +100,7 @@ final readonly class Issues extends Resource
         try {
             $response = $this->connector->get("organizations/{$this->organization()}/shortids/".self::segment($shortId).'/');
         } catch (RequestFailedException $exception) {
-            $server = new Server($this->connector)->info();
+            $server = new Instance($this->connector)->settings();
 
             if ($exception->isNotFound() && ! $server->versionAtLeast(self::SHORT_ID_VERSION)) {
                 throw new UnsupportedByServerException('Short id lookup', self::SHORT_ID_VERSION, $server->version);
@@ -187,6 +192,66 @@ final readonly class Issues extends Resource
             'limit' => $limit,
             'cursor' => $cursor,
         ], UserReport::fromArray(...));
+    }
+
+    /**
+     * Bulk update one project's issues. Without ids GlitchTip only allows a
+     * status change, applied to issues in $scope (unresolved by default).
+     */
+    public function bulkUpdateForProject(string $project, IssueFilter $filter, IssueUpdate $update, ?IssueStatus $scope = null): void
+    {
+        $this->connector->put(
+            "projects/{$this->organization()}/".self::segment($project).'/issues/',
+            $update->toArray(),
+            $filter->toQuery() + ['status' => $scope],
+        );
+    }
+
+    /**
+     * Event counts over time for several issues at once.
+     *
+     * @param  list<int|string>  $issues
+     * @return list<IssueStats>
+     */
+    public function stats(array $issues, IssueStatsPeriod $period = IssueStatsPeriod::Day): array
+    {
+        return self::listOf($this->connector->get("organizations/{$this->organization()}/issues-stats/", [
+            'groups' => $issues,
+            'statsPeriod' => $period,
+        ]), IssueStats::fromArray(...));
+    }
+
+    /**
+     * The fingerprint hashes grouped into an issue.
+     *
+     * @return CursorPage<IssueHash>
+     */
+    public function hashes(int|string $issue, ?int $limit = null, ?string $cursor = null): CursorPage
+    {
+        return $this->page($this->hashPath($issue), [
+            'limit' => $limit,
+            'cursor' => $cursor,
+        ], IssueHash::fromArray(...));
+    }
+
+    /**
+     * Split hashes out of an issue (unmerge). Future events with those
+     * hashes start new issues; processing happens in the background.
+     *
+     * @param  list<string>  $hashes
+     */
+    public function deleteHashes(int|string $issue, array $hashes): void
+    {
+        if ($hashes === []) {
+            throw new InvalidArgumentException('Pass at least one hash id to delete.');
+        }
+
+        $this->connector->delete($this->hashPath($issue), ['id' => $hashes]);
+    }
+
+    private function hashPath(int|string $issue): string
+    {
+        return "organizations/{$this->organization()}/issues/".self::segment($issue).'/hashes/';
     }
 
     private function path(int|string $issue): string

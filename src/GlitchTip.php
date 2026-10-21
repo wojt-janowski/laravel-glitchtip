@@ -7,18 +7,26 @@ namespace WojtJanowski\GlitchTip;
 use InvalidArgumentException;
 use WojtJanowski\GlitchTip\Data\ServerInfo;
 use WojtJanowski\GlitchTip\Resources\Alerts;
+use WojtJanowski\GlitchTip\Resources\Billing;
 use WojtJanowski\GlitchTip\Resources\Comments;
 use WojtJanowski\GlitchTip\Resources\Environments;
 use WojtJanowski\GlitchTip\Resources\Events;
+use WojtJanowski\GlitchTip\Resources\Instance;
 use WojtJanowski\GlitchTip\Resources\Issues;
 use WojtJanowski\GlitchTip\Resources\Logs;
+use WojtJanowski\GlitchTip\Resources\Members;
 use WojtJanowski\GlitchTip\Resources\Monitors;
 use WojtJanowski\GlitchTip\Resources\Organizations;
 use WojtJanowski\GlitchTip\Resources\Performance;
 use WojtJanowski\GlitchTip\Resources\Projects;
 use WojtJanowski\GlitchTip\Resources\Releases;
-use WojtJanowski\GlitchTip\Resources\Server;
+use WojtJanowski\GlitchTip\Resources\Repositories;
+use WojtJanowski\GlitchTip\Resources\SocialApps;
+use WojtJanowski\GlitchTip\Resources\Stats;
 use WojtJanowski\GlitchTip\Resources\Teams;
+use WojtJanowski\GlitchTip\Resources\Uploads;
+use WojtJanowski\GlitchTip\Resources\Users;
+use WojtJanowski\GlitchTip\Resources\Wizard;
 use WojtJanowski\GlitchTip\Support\Connector;
 
 final readonly class GlitchTip
@@ -71,7 +79,7 @@ final readonly class GlitchTip
      */
     public function server(): ServerInfo
     {
-        return new Server($this->connector)->info();
+        return $this->instance()->settings();
     }
 
     public function organizations(): Organizations
@@ -132,5 +140,77 @@ final readonly class GlitchTip
     public function performance(): Performance
     {
         return new Performance($this->connector, $this->organization);
+    }
+
+    /**
+     * Instance settings, license and the current credentials.
+     */
+    public function instance(): Instance
+    {
+        return new Instance($this->connector, $this->organization);
+    }
+
+    /**
+     * Organization members and invitations.
+     */
+    public function members(): Members
+    {
+        return new Members($this->connector, $this->organization);
+    }
+
+    /**
+     * The organization's own single sign-on providers.
+     */
+    public function socialApps(): SocialApps
+    {
+        return new SocialApps($this->connector, $this->organization);
+    }
+
+    /**
+     * The token's user account.
+     */
+    public function users(): Users
+    {
+        return new Users($this->connector, $this->organization);
+    }
+
+    /**
+     * Stripe billing, on instances with billing enabled.
+     */
+    public function billing(): Billing
+    {
+        return new Billing($this->connector, $this->organization);
+    }
+
+    /**
+     * Source repositories linked to the organization.
+     */
+    public function repositories(): Repositories
+    {
+        return new Repositories($this->connector, $this->organization);
+    }
+
+    /**
+     * Chunked uploads for source maps, release artifacts and debug files.
+     */
+    public function uploads(): Uploads
+    {
+        return new Uploads($this->connector, $this->organization);
+    }
+
+    /**
+     * Organization-wide event volume over time.
+     */
+    public function stats(): Stats
+    {
+        return new Stats($this->connector, $this->organization);
+    }
+
+    /**
+     * The sentry-wizard setup handshake.
+     */
+    public function wizard(): Wizard
+    {
+        return new Wizard($this->connector, $this->organization);
     }
 }
