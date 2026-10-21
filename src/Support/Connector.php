@@ -119,6 +119,14 @@ final readonly class Connector
     }
 
     /**
+     * A DELETE that works without a token, such as clearing a wizard hash.
+     */
+    public function deletePublic(string $path): Response
+    {
+        return $this->send('DELETE', $path, authenticate: false);
+    }
+
+    /**
      * @param  array<string, mixed>  $query
      * @param  array<array-key, mixed>|null  $body  for the few DELETEs that take one
      */

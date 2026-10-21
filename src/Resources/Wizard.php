@@ -28,21 +28,22 @@ final readonly class Wizard extends Resource
     }
 
     /**
-     * The project data stored under a hash.
+     * The project data stored under a hash. The hash is the credential, so
+     * this works without a token; one is sent when configured.
      *
      * @return array<string, mixed>
      */
     public function data(string $hash): array
     {
-        return self::object($this->connector->get($this->path($hash)));
+        return self::object($this->connector->getPublic($this->path($hash)));
     }
 
     /**
-     * Remove a hash and the credentials stored under it.
+     * Remove a hash and the credentials stored under it. Works without a token.
      */
     public function delete(string $hash): void
     {
-        $this->connector->delete($this->path($hash));
+        $this->connector->deletePublic($this->path($hash));
     }
 
     private function path(string $hash): string

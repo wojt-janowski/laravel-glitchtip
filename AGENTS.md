@@ -46,7 +46,8 @@
 - Chunk uploads go to `file_gzip`, each part gzipped and named by the SHA-1
   of its uncompressed content; GlitchTip verifies the name.
 - A few endpoints need no token (`/api/settings/`, heartbeats, invitation
-  lookups, wizard start); use `getPublic()`/`postPublic()` for them.
+  lookups, the sentry-wizard hash endpoints); use `getPublic()`,
+  `postPublic()` or `deletePublic()` for them.
 - User endpoints only act on the token's own user; default to `'me'`.
 
 ## API Coverage
