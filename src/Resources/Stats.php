@@ -44,14 +44,14 @@ final readonly class Stats extends Resource
 
         $series = StatsSeries::fromArray(self::object($response), $field->value);
 
-        return $interval === StatsInterval::Day ? self::daily($series) : $series;
+        return $interval === StatsInterval::Day ? $this->daily($series) : $series;
     }
 
     /**
      * Hourly values added up per UTC day. A day stays null only when every
      * hour in it is.
      */
-    private static function daily(StatsSeries $hours): StatsSeries
+    private function daily(StatsSeries $hours): StatsSeries
     {
         $days = [];
 

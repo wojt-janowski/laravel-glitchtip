@@ -197,7 +197,7 @@ final readonly class Connector
     {
         $hasToken = $this->token !== null && $this->token !== '';
 
-        if ($authenticate && ! $hasToken && $this->session === null) {
+        if ($authenticate && ! $hasToken && ! $this->session instanceof BrowserSession) {
             throw MissingConfigurationException::token();
         }
 
@@ -211,7 +211,7 @@ final readonly class Connector
             $request->asJson();
         }
 
-        if ($this->session !== null) {
+        if ($this->session instanceof BrowserSession) {
             $request->withHeaders($this->session->headers($this->url));
         } elseif ($hasToken) {
             $request->withToken((string) $this->token);
