@@ -21,8 +21,10 @@ use WojtJanowski\GlitchTip\Resources\Releases;
 use WojtJanowski\GlitchTip\Resources\Teams;
 
 /**
+ * @method static Client using(string $url, string $token, string|null $organization = null)
  * @method static Client forOrganization(string $organization)
  * @method static string|null organizationSlug()
+ * @method static string url()
  * @method static ServerInfo server()
  * @method static Organizations organizations()
  * @method static Projects projects()
