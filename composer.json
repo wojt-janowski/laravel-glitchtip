@@ -48,7 +48,8 @@
         "test": "pest",
         "analyse": "phpstan analyse",
         "format": "pint",
-        "refactor": "rector process"
+        "refactor": "rector process",
+        "spec": "curl -fsSL https://app.glitchtip.com/api/openapi.json -o tests/Fixtures/openapi.json"
     },
     "config": {
         "sort-packages": true,
