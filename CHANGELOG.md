@@ -6,6 +6,8 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0-RC1] - 2026-10-21
+
 ### Added
 
 - Typed client for the GlitchTip API: organizations, projects and keys, teams,
@@ -20,3 +22,6 @@ All notable changes to this package are documented here. The format follows
   `UnsupportedByServerException` instead of a bare 404.
 - Retries for idempotent requests on connection failures, 429 and 5xx gateway
   responses.
+
+[Unreleased]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC1...HEAD
+[1.0.0-RC1]: https://github.com/wojt-janowski/laravel-glitchtip/releases/tag/v1.0.0-RC1

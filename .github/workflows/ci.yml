@@ -17,7 +17,7 @@ jobs:
         with:
           php-version: '8.5'
           coverage: none
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: build
           key: build-${{ github.ref_name }}-${{ hashFiles('composer.json', 'phpstan.neon', 'rector.php', 'pint.json') }}
