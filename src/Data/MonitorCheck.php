@@ -26,11 +26,12 @@ final readonly class MonitorCheck
     {
         $a = Attributes::of($data);
 
+        // The heartbeat endpoint answers in snake_case, unlike the rest of the API.
         return new self(
-            startedAt: $a->date('startCheck'),
-            isUp: $a->bool('isUp'),
+            startedAt: $a->has('startCheck') ? $a->date('startCheck') : $a->date('start_check'),
+            isUp: $a->nullableBool('isUp') ?? $a->bool('is_up'),
             reason: $a->nullableInt('reason'),
-            responseTime: $a->nullableInt('responseTime'),
+            responseTime: $a->nullableInt('responseTime') ?? $a->nullableInt('response_time'),
         );
     }
 }

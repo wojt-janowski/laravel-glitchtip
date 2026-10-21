@@ -6,6 +6,7 @@ use WojtJanowski\GlitchTip\Data\Event;
 use WojtJanowski\GlitchTip\Data\Issue;
 use WojtJanowski\GlitchTip\Data\LogStats;
 use WojtJanowski\GlitchTip\Data\Monitor;
+use WojtJanowski\GlitchTip\Data\MonitorCheck;
 use WojtJanowski\GlitchTip\Data\ProjectKey;
 use WojtJanowski\GlitchTip\Enums\IssueStatus;
 use WojtJanowski\GlitchTip\Enums\Level;
@@ -94,6 +95,15 @@ describe('Monitor', function (): void {
             ->and($monitor->isUp)->toBeFalse()
             ->and($monitor->checks)->toHaveCount(1)
             ->and($monitor->checks[0]->reason)->toBe(2);
+    });
+});
+
+describe('MonitorCheck', function (): void {
+    it('reads the snake_case heartbeat response', function (): void {
+        $check = MonitorCheck::fromArray(['start_check' => '2026-10-21T09:13:57.497Z', 'is_up' => true, 'reason' => null]);
+
+        expect($check->isUp)->toBeTrue()
+            ->and($check->startedAt->toIso8601ZuluString())->toBe('2026-10-21T09:13:57Z');
     });
 });
 
