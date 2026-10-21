@@ -6,6 +6,13 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `GlitchTip::using($url, $token, $organization)` returns a separate client
+  for another account, so an app can read several accounts side by side
+  without touching config or the default client.
+- `GlitchTip::url()` returns the base URL a client talks to.
+
 ## [1.0.0-RC1] - 2026-10-21
 
 ### Added

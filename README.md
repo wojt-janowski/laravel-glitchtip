@@ -64,6 +64,24 @@ GlitchTip::issues()->list();
 GlitchTip::forOrganization('other-org')->issues()->list();
 ```
 
+### Multiple accounts
+
+To work with several GlitchTip accounts, servers or tokens at once, call `using()`. It returns a separate client and never changes config or the default client, so data from different accounts cannot mix, even when one request reads from all of them:
+
+```php
+use WojtJanowski\GlitchTip\Facades\GlitchTip;
+
+$inbox = $accounts->flatMap(fn ($account) => GlitchTip::using($account->url, $account->token, $account->organization)
+    ->issues()
+    ->list(query: 'is:unresolved')
+    ->collect()
+    ->map(fn ($issue) => ['account' => $account->id, 'issue' => $issue]));
+```
+
+Each client keeps its own server and token for every call it makes, including fetching later pages. Timeouts and retry settings come from config.
+
+The configured default organization is not carried over to another account. Pass the organization to `using()`, or call `forOrganization()` on the new client. You don't need a default account in `.env` if you only use `using()`.
+
 ### Pagination
 
 Paginated endpoints return a `CursorPage`. It is countable and iterable over the current page, and you can step through pages or stream every item:
