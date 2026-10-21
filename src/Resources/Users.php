@@ -33,12 +33,18 @@ final readonly class Users extends Resource
         return User::fromArray(self::object($this->connector->get($this->path($user))));
     }
 
+    /**
+     * Replace the user's options, and rename them when a name is given.
+     */
     public function update(UserOptions $options, ?string $name = null, int|string $user = 'me'): User
     {
-        return User::fromArray(self::object($this->connector->put($this->path($user), [
-            'options' => $options->toArray(),
-            'name' => $name,
-        ])));
+        $body = ['options' => $options->toArray()];
+
+        if ($name !== null) {
+            $body['name'] = $name;
+        }
+
+        return User::fromArray(self::object($this->connector->put($this->path($user), $body)));
     }
 
     /**
