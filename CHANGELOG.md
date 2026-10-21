@@ -36,8 +36,11 @@ All notable changes to this package are documented here. The format follows
 
 - `GlitchTip::server()` and the other endpoints that need no token
   (heartbeats, invitation lookups, login providers) now work without one.
-- `Resources\Server` is now `Resources\Instance`. `GlitchTip::server()` is
-  unchanged.
+
+### Deprecated
+
+- `Resources\Server`, in favour of `Resources\Instance`
+  (`GlitchTip::instance()->settings()`). `GlitchTip::server()` is unchanged.
 
 ## [1.0.0-RC2] - 2026-10-21
 
