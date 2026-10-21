@@ -15,5 +15,8 @@ All notable changes to this package are documented here. The format follows
   patterns, trends).
 - Cursor pagination over GlitchTip's `Link` header, with lazy iteration
   across pages.
+- `GlitchTip::server()` reports the instance version and enabled features.
+  Short id lookup on a server older than GlitchTip 7 throws
+  `UnsupportedByServerException` instead of a bare 404.
 - Retries for idempotent requests on connection failures, 429 and 5xx gateway
   responses.

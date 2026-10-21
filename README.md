@@ -101,7 +101,7 @@ $issues = GlitchTip::issues()->list(
 $issues = GlitchTip::issues()->forProject('backend', query: 'is:unresolved');
 
 $issue = GlitchTip::issues()->get(42);
-$issue = GlitchTip::issues()->findByShortId('BACKEND-1A');   // needs GlitchTip newer than 6.2.6; 404 on self-hosted 6.2.x
+$issue = GlitchTip::issues()->findByShortId('BACKEND-1A');   // needs GlitchTip 7; throws UnsupportedByServerException on 6.x
 
 GlitchTip::issues()->resolve(42);
 GlitchTip::issues()->ignore(42);
@@ -218,6 +218,18 @@ GlitchTip::performance()->spanGroups(projects: [7], op: 'db.sql.query');
 GlitchTip::performance()->nPlusOne(projects: [7]);
 ```
 
+### Server version
+
+`GlitchTip::server()` reads `/api/settings/` and returns the instance's version and enabled features:
+
+```php
+$server = GlitchTip::server();
+
+$server->version;                   // "6.2.6"
+$server->versionAtLeast('7.0.0');   // pre-releases count, so "7.0.0rc2" passes
+$server->hasFeature('logs');        // also 'uptime', 'mcp', 'email'
+```
+
 ### Other resources
 
 ```php
@@ -248,7 +260,7 @@ try {
 }
 ```
 
-A missing token or organization throws `MissingConfigurationException`. Both exceptions extend `GlitchTipException`.
+A missing token or organization throws `MissingConfigurationException`. Calling an endpoint the server is too old for throws `UnsupportedByServerException`. All of these extend `GlitchTipException`.
 
 ## Testing your code
 

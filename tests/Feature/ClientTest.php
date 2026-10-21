@@ -10,6 +10,7 @@ use WojtJanowski\GlitchTip\Data\MonitorInput;
 use WojtJanowski\GlitchTip\Enums\IssueSort;
 use WojtJanowski\GlitchTip\Exceptions\MissingConfigurationException;
 use WojtJanowski\GlitchTip\Exceptions\RequestFailedException;
+use WojtJanowski\GlitchTip\Exceptions\UnsupportedByServerException;
 use WojtJanowski\GlitchTip\Facades\GlitchTip;
 
 describe('authentication and scoping', function (): void {
@@ -98,6 +99,37 @@ describe('issues', function (): void {
 
         expect(GlitchTip::issues()->findByShortId('BACKEND-1A')->id)->toBe('42');
     });
+});
+
+describe('server', function (): void {
+    it('reads the version and features from the settings endpoint', function (): void {
+        Http::fake(['glitchtip.test/api/settings/' => Http::response(['version' => '7.0.0rc2', 'enabledFeatures' => ['logs', 'uptime']])]);
+
+        $server = GlitchTip::server();
+
+        expect($server->version)->toBe('7.0.0rc2')
+            ->and($server->versionAtLeast('7.0.0'))->toBeTrue()
+            ->and($server->versionAtLeast('7.1.0'))->toBeFalse()
+            ->and($server->hasFeature('logs'))->toBeTrue();
+    });
+
+    it('explains a short id 404 from a server that predates the endpoint', function (): void {
+        Http::fake([
+            'glitchtip.test/api/0/organizations/acme/shortids/*' => Http::response(['detail' => 'Not found'], 404),
+            'glitchtip.test/api/settings/' => Http::response(['version' => '6.2.6']),
+        ]);
+
+        GlitchTip::issues()->findByShortId('BACKEND-1A');
+    })->throws(UnsupportedByServerException::class, 'Short id lookup needs GlitchTip 7.0.0 or newer; this server runs 6.2.6.');
+
+    it('keeps a genuine short id 404 on a server that has the endpoint', function (): void {
+        Http::fake([
+            'glitchtip.test/api/0/organizations/acme/shortids/*' => Http::response(['detail' => 'Not found'], 404),
+            'glitchtip.test/api/settings/' => Http::response(['version' => '7.0.0']),
+        ]);
+
+        GlitchTip::issues()->findByShortId('BACKEND-999');
+    })->throws(RequestFailedException::class, 'failed with 404');
 });
 
 describe('releases', function (): void {

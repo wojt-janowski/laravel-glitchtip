@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace WojtJanowski\GlitchTip;
 
+use WojtJanowski\GlitchTip\Data\ServerInfo;
 use WojtJanowski\GlitchTip\Resources\Alerts;
 use WojtJanowski\GlitchTip\Resources\Comments;
 use WojtJanowski\GlitchTip\Resources\Environments;
@@ -15,6 +16,7 @@ use WojtJanowski\GlitchTip\Resources\Organizations;
 use WojtJanowski\GlitchTip\Resources\Performance;
 use WojtJanowski\GlitchTip\Resources\Projects;
 use WojtJanowski\GlitchTip\Resources\Releases;
+use WojtJanowski\GlitchTip\Resources\Server;
 use WojtJanowski\GlitchTip\Resources\Teams;
 use WojtJanowski\GlitchTip\Support\Connector;
 
@@ -36,6 +38,14 @@ final readonly class GlitchTip
     public function organizationSlug(): ?string
     {
         return $this->organization;
+    }
+
+    /**
+     * The server's version and enabled features.
+     */
+    public function server(): ServerInfo
+    {
+        return new Server($this->connector)->info();
     }
 
     public function organizations(): Organizations

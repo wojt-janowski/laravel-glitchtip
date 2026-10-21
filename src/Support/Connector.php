@@ -73,7 +73,9 @@ final readonly class Connector
     private function send(string $method, string $path, array $query = [], ?array $body = null): Response
     {
         $queryString = Query::build($query);
-        $uri = '/api/0/'.ltrim($path, '/').($queryString === '' ? '' : '?'.$queryString);
+        // Paths are relative to /api/0/ unless they name another API root, like /api/settings/.
+        $base = str_starts_with($path, '/api/') ? $path : '/api/0/'.ltrim($path, '/');
+        $uri = $base.($queryString === '' ? '' : '?'.$queryString);
 
         $options = $body === null ? [] : ['json' => (object) $body];
 

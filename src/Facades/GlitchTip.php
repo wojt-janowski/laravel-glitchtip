@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WojtJanowski\GlitchTip\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use WojtJanowski\GlitchTip\Data\ServerInfo;
 use WojtJanowski\GlitchTip\GlitchTip as Client;
 use WojtJanowski\GlitchTip\Resources\Alerts;
 use WojtJanowski\GlitchTip\Resources\Comments;
@@ -22,6 +23,7 @@ use WojtJanowski\GlitchTip\Resources\Teams;
 /**
  * @method static Client forOrganization(string $organization)
  * @method static string|null organizationSlug()
+ * @method static ServerInfo server()
  * @method static Organizations organizations()
  * @method static Projects projects()
  * @method static Teams teams()

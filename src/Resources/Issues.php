@@ -12,10 +12,14 @@ use WojtJanowski\GlitchTip\Data\IssueTag;
 use WojtJanowski\GlitchTip\Data\IssueUpdate;
 use WojtJanowski\GlitchTip\Data\UserReport;
 use WojtJanowski\GlitchTip\Enums\IssueSort;
+use WojtJanowski\GlitchTip\Exceptions\RequestFailedException;
+use WojtJanowski\GlitchTip\Exceptions\UnsupportedByServerException;
 use WojtJanowski\GlitchTip\Support\CursorPage;
 
 final readonly class Issues extends Resource
 {
+    private const string SHORT_ID_VERSION = '7.0.0';
+
     /**
      * Issues across the organization.
      *
@@ -81,13 +85,24 @@ final readonly class Issues extends Resource
     /**
      * Look up an issue by its short id, e.g. "BACKEND-1A".
      *
-     * The shortids endpoint is newer than GlitchTip 6.2.6 (it runs on
-     * app.glitchtip.com but is not yet in a release), so self-hosted 6.2.x
-     * answers 404 for every short id.
+     * Needs GlitchTip 7. Older servers answer 404 for every short id, so a 404
+     * is checked against the server version to tell the two cases apart.
+     *
+     * @throws UnsupportedByServerException when the server predates the endpoint
      */
     public function findByShortId(string $shortId): Issue
     {
-        $response = $this->connector->get("organizations/{$this->organization()}/shortids/".self::segment($shortId).'/');
+        try {
+            $response = $this->connector->get("organizations/{$this->organization()}/shortids/".self::segment($shortId).'/');
+        } catch (RequestFailedException $exception) {
+            $server = new Server($this->connector)->info();
+
+            if ($exception->isNotFound() && ! $server->versionAtLeast(self::SHORT_ID_VERSION)) {
+                throw new UnsupportedByServerException('Short id lookup', self::SHORT_ID_VERSION, $server->version);
+            }
+
+            throw $exception;
+        }
 
         /** @var array<string, mixed> $group */
         $group = $response->json('group', []);
