@@ -31,6 +31,7 @@ use WojtJanowski\GlitchTip\Resources\Wizard;
 
 /**
  * @method static Client using(string $url, string $token, string|null $organization = null)
+ * @method static Client usingSession(string $url, string $sessionId, string $csrfToken, string|null $organization = null)
  * @method static Client forOrganization(string $organization)
  * @method static string|null organizationSlug()
  * @method static string url()

@@ -39,6 +39,8 @@
   organization. `IssueFilter` refuses an empty filter unless built with
   `IssueFilter::everything()`.
 - Issue `count` is a string in the API, so DTOs cast it.
+- `stats_v2` with `interval=1d` returns only the first hour of each day
+  (seen on 6.2.6). `Stats::series()` asks for hours and sums them per UTC day.
 - Release versions can contain `/` and `@`, so every path segment is
   `rawurlencode`d.
 - Multipart uploads must not call `asJson()`: its Content-Type header

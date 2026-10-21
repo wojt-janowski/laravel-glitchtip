@@ -13,6 +13,7 @@ use WojtJanowski\GlitchTip\Data\UserOptions;
 use WojtJanowski\GlitchTip\Enums\IssueStatus;
 use WojtJanowski\GlitchTip\Enums\MemberRole;
 use WojtJanowski\GlitchTip\Enums\StatsCategory;
+use WojtJanowski\GlitchTip\Enums\StatsInterval;
 use WojtJanowski\GlitchTip\Exceptions\MissingConfigurationException;
 use WojtJanowski\GlitchTip\Facades\GlitchTip;
 use WojtJanowski\GlitchTip\GlitchTip as Client;
@@ -214,6 +215,23 @@ describe('responses', function (): void {
             ->and($series->toMap())->toBe(['2026-10-01T00:00:00+00:00' => 4, '2026-10-01T01:00:00+00:00' => null]);
 
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'category=transaction&field=sum%28quantity%29&interval=1h'));
+    });
+
+    it('adds up hours into days, because GlitchTip answers 1d with only the first hour of each day', function (): void {
+        Http::fake(['*/stats_v2/*' => Http::response([
+            'intervals' => ['2026-10-20T22:00:00+00:00', '2026-10-20T23:00:00+00:00', '2026-10-21T00:00:00+00:00', '2026-10-21T01:00:00+00:00', '2026-10-22T00:00:00+00:00'],
+            'groups' => [['series' => ['sum(quantity)' => [3, null, 22, 29, null]]]],
+        ])]);
+
+        $series = GlitchTip::stats()->series(CarbonImmutable::parse('2026-10-20T22:00Z'), CarbonImmutable::parse('2026-10-22T01:00Z'), interval: StatsInterval::Day);
+
+        expect($series->toMap())->toBe([
+            '2026-10-20T00:00:00+00:00' => 3,
+            '2026-10-21T00:00:00+00:00' => 51,
+            '2026-10-22T00:00:00+00:00' => null,
+        ]);
+
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'interval=1h'));
     });
 
     it('keeps fractional uptime and log usage', function (): void {

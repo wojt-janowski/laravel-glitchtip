@@ -85,6 +85,23 @@ Each client keeps its own server and token for every call it makes, including fe
 
 The configured default organization is not carried over to another account. Pass the organization to `using()`, or call `forOrganization()` on the new client. You don't need a default account in `.env` if you only use `using()`.
 
+### Acting as a signed-in user
+
+GlitchTip's own UI signs users in with a Django session cookie, not a token. An app served from the same origin as the GlitchTip instance, for example behind a reverse proxy that sends `/api/` and `/_allauth/` to GlitchTip, receives that user's `sessionid` and `csrftoken` cookies on every request. Pass them to `usingSession()` to act as that user, with their role and under their name in GlitchTip:
+
+```php
+$glitchTip = GlitchTip::usingSession(
+    url: 'https://glitchtip.example.com',
+    sessionId: $request->cookie('sessionid'),
+    csrfToken: $request->cookie('csrftoken'),
+    organization: 'acme',
+);
+
+$me = $glitchTip->users()->get();
+```
+
+The client sends both cookies, the `X-CSRFToken` header and an `Origin` of the instance, so writes pass Django's CSRF checks. Like `using()`, it leaves config and the default client alone. A browser on another origin never sends these cookies, so this does not work for apps on a different domain; use a token there.
+
 ### Pagination
 
 Paginated endpoints return a `CursorPage`. It is countable and iterable over the current page, and you can step through pages or stream every item:

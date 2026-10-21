@@ -6,6 +6,24 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `GlitchTip::usingSession($url, $sessionId, $csrfToken, $organization)`
+  returns a client that acts as a user signed in to GlitchTip in the
+  browser, for apps served from the instance's origin. It sends the
+  `sessionid` and `csrftoken` cookies plus the `X-CSRFToken`, `Origin` and
+  `Referer` headers Django's CSRF checks need.
+
+### Fixed
+
+- `stats()->series(interval: StatsInterval::Day)` returned only the first
+  hour of each day, because GlitchTip 6.2's stats_v2 does. Daily series are
+  now added up from hourly buckets.
+
+### Changed
+
+- Allow Guzzle 8, which current Laravel 13 releases install.
+
 ## [1.0.0-RC3] - 2026-10-21
 
 ### Added

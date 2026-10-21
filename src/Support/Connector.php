@@ -30,6 +30,7 @@ final readonly class Connector
         private int $connectTimeout = 10,
         private int $retryTimes = 2,
         private int $retrySleepMilliseconds = 500,
+        private ?BrowserSession $session = null,
     ) {}
 
     /**
@@ -46,6 +47,24 @@ final readonly class Connector
             connectTimeout: $this->connectTimeout,
             retryTimes: $this->retryTimes,
             retrySleepMilliseconds: $this->retrySleepMilliseconds,
+        );
+    }
+
+    /**
+     * A connector that acts as a user signed in to GlitchTip in the browser,
+     * keeping this one's HTTP client, timeouts and retry settings.
+     */
+    public function withSession(string $url, BrowserSession $session): self
+    {
+        return new self(
+            http: $this->http,
+            url: $url,
+            token: null,
+            timeout: $this->timeout,
+            connectTimeout: $this->connectTimeout,
+            retryTimes: $this->retryTimes,
+            retrySleepMilliseconds: $this->retrySleepMilliseconds,
+            session: $session,
         );
     }
 
@@ -178,7 +197,7 @@ final readonly class Connector
     {
         $hasToken = $this->token !== null && $this->token !== '';
 
-        if ($authenticate && ! $hasToken) {
+        if ($authenticate && ! $hasToken && $this->session === null) {
             throw MissingConfigurationException::token();
         }
 
@@ -192,7 +211,9 @@ final readonly class Connector
             $request->asJson();
         }
 
-        if ($hasToken) {
+        if ($this->session !== null) {
+            $request->withHeaders($this->session->headers($this->url));
+        } elseif ($hasToken) {
             $request->withToken((string) $this->token);
         }
 

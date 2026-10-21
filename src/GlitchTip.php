@@ -27,6 +27,7 @@ use WojtJanowski\GlitchTip\Resources\Teams;
 use WojtJanowski\GlitchTip\Resources\Uploads;
 use WojtJanowski\GlitchTip\Resources\Users;
 use WojtJanowski\GlitchTip\Resources\Wizard;
+use WojtJanowski\GlitchTip\Support\BrowserSession;
 use WojtJanowski\GlitchTip\Support\Connector;
 
 final readonly class GlitchTip
@@ -51,6 +52,24 @@ final readonly class GlitchTip
         }
 
         return new self($this->connector->withCredentials($url, $token), $organization);
+    }
+
+    /**
+     * A client that acts as a user signed in to GlitchTip's own UI, using the
+     * `sessionid` and `csrftoken` cookies their browser sent. It only works
+     * for an app served from the GlitchTip instance's origin, which is where
+     * the browser sends those cookies. Like using(), it leaves this client
+     * and config untouched.
+     *
+     * @param  string  $url  the instance base URL, e.g. https://glitchtip.example.com
+     */
+    public function usingSession(string $url, string $sessionId, string $csrfToken, ?string $organization = null): self
+    {
+        if (trim($url) === '') {
+            throw new InvalidArgumentException('A GlitchTip account needs a URL.');
+        }
+
+        return new self($this->connector->withSession($url, new BrowserSession($sessionId, $csrfToken)), $organization);
     }
 
     /**
