@@ -37,7 +37,8 @@ final readonly class MonitorInput
         return [
             'name' => $this->name,
             'monitorType' => $this->type->value,
-            'url' => $this->url,
+            // GlitchTip 6.2 answers 500 when updating a monitor whose url is null.
+            'url' => $this->url ?? '',
             'interval' => $this->interval,
             'timeout' => $this->timeout,
             'expectedStatus' => $this->expectedStatus,
