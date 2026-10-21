@@ -15,8 +15,8 @@ final readonly class BillingUsage
         public int $total,
         public int $eventCount,
         public int $transactionEventCount,
-        public int $uptimeCheckEventCount,
-        public int $logEventCount,
+        public float $uptimeCheckEventCount,
+        public float $logEventCount,
         public int $fileSizeMb,
     ) {}
 
@@ -31,8 +31,8 @@ final readonly class BillingUsage
             total: $a->int('total'),
             eventCount: $a->int('eventCount'),
             transactionEventCount: $a->int('transactionEventCount'),
-            uptimeCheckEventCount: $a->int('uptimeCheckEventCount'),
-            logEventCount: $a->int('logEventCount'),
+            uptimeCheckEventCount: $a->float('uptimeCheckEventCount'),
+            logEventCount: $a->float('logEventCount'),
             fileSizeMb: $a->int('fileSizeMb'),
         );
     }

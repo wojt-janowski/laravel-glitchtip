@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use WojtJanowski\GlitchTip\Data\Commit;
@@ -15,6 +16,8 @@ use WojtJanowski\GlitchTip\Enums\StatsCategory;
 use WojtJanowski\GlitchTip\Exceptions\MissingConfigurationException;
 use WojtJanowski\GlitchTip\Facades\GlitchTip;
 use WojtJanowski\GlitchTip\GlitchTip as Client;
+use WojtJanowski\GlitchTip\Resources\Server;
+use WojtJanowski\GlitchTip\Support\Connector;
 
 function withoutToken(): void
 {
@@ -115,6 +118,25 @@ describe('requests without a token', function (): void {
         expect(GlitchTip::monitors()->heartbeat('endpoint-uuid')->isUp)->toBeTrue();
     });
 
+    it('reads and clears sentry-wizard data with only the hash', function (): void {
+        withoutToken();
+        Http::fake(['*' => Http::response(['projects' => []])]);
+
+        expect(GlitchTip::wizard()->data('wizard-hash'))->toBe(['projects' => []]);
+        GlitchTip::wizard()->delete('wizard-hash');
+
+        Http::assertSentCount(2);
+        Http::assertNotSent(fn (Request $request): bool => $request->hasHeader('Authorization'));
+    });
+
+    it('keeps the deprecated Server resource working', function (): void {
+        Http::fake(['*' => Http::response(['version' => '6.2.6'])]);
+
+        $server = new Server(new Connector(app(Factory::class), 'https://glitchtip.test', 'test-token'));
+
+        expect($server->info()->version)->toBe('6.2.6');
+    });
+
     it('still requires a token for everything else', function (): void {
         withoutToken();
 
@@ -192,6 +214,15 @@ describe('responses', function (): void {
             ->and($series->toMap())->toBe(['2026-10-01T00:00:00+00:00' => 4, '2026-10-01T01:00:00+00:00' => null]);
 
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'category=transaction&field=sum%28quantity%29&interval=1h'));
+    });
+
+    it('keeps fractional uptime and log usage', function (): void {
+        Http::fake(['*' => Http::response(['total' => 10, 'eventCount' => 4, 'transactionEventCount' => 3, 'uptimeCheckEventCount' => 2.5, 'logEventCount' => 0.5, 'fileSizeMb' => 0])]);
+
+        $usage = GlitchTip::billing()->usage();
+
+        expect($usage->uptimeCheckEventCount)->toBe(2.5)
+            ->and($usage->logEventCount)->toBe(0.5);
     });
 
     it('returns no subscription when the organization has none', function (): void {

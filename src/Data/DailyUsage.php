@@ -13,8 +13,8 @@ final readonly class DailyUsage
         public CarbonImmutable $date,
         public int $eventCount,
         public int $transactionEventCount,
-        public int $uptimeCheckEventCount,
-        public int $logEventCount,
+        public float $uptimeCheckEventCount,
+        public float $logEventCount,
     ) {}
 
     /**
@@ -28,8 +28,8 @@ final readonly class DailyUsage
             date: $a->date('date'),
             eventCount: $a->int('eventCount'),
             transactionEventCount: $a->int('transactionEventCount'),
-            uptimeCheckEventCount: $a->int('uptimeCheckEventCount'),
-            logEventCount: $a->int('logEventCount'),
+            uptimeCheckEventCount: $a->float('uptimeCheckEventCount'),
+            logEventCount: $a->float('logEventCount'),
         );
     }
 }
