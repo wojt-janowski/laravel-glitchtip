@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use WojtJanowski\GlitchTip\Data\Commit;
 use WojtJanowski\GlitchTip\Data\IssueFilter;
 use WojtJanowski\GlitchTip\Data\IssueUpdate;
+use WojtJanowski\GlitchTip\Data\UserOptions;
 use WojtJanowski\GlitchTip\Enums\IssueStatus;
 use WojtJanowski\GlitchTip\Enums\MemberRole;
 use WojtJanowski\GlitchTip\Enums\StatsCategory;
@@ -156,6 +157,15 @@ describe('request bodies', function (): void {
         GlitchTip::issues()->bulkUpdateForProject('backend', IssueFilter::everything(), IssueUpdate::resolved(), IssueStatus::Ignored);
 
         Http::assertSent(fn (Request $request): bool => $request->url() === 'https://glitchtip.test/api/0/projects/acme/backend/issues/?status=ignored');
+    });
+
+    it('keeps the user name unless a new one is given', function (): void {
+        Http::fake(['*' => Http::response([])]);
+
+        GlitchTip::users()->update(new UserOptions(timezone: 'UTC'));
+
+        Http::assertSent(fn (Request $request): bool => ! array_key_exists('name', $request->data())
+            && $request['options']['timezone'] === 'UTC');
     });
 
     it('refuses to delete no hashes', function (): void {
