@@ -6,6 +6,7 @@ namespace WojtJanowski\GlitchTip\Resources;
 
 use DateTimeInterface;
 use WojtJanowski\GlitchTip\Data\LogEntry;
+use WojtJanowski\GlitchTip\Data\LogResource;
 use WojtJanowski\GlitchTip\Data\LogStats;
 use WojtJanowski\GlitchTip\Support\CursorPage;
 
@@ -75,6 +76,17 @@ final readonly class Logs extends Resource
             'start' => $start,
             'end' => $end,
         ])));
+    }
+
+    /**
+     * Known services, environments and hosts, most recently seen first.
+     *
+     * @param  string|null  $type  "service", "environment" or "host"; all when omitted
+     * @return list<LogResource>
+     */
+    public function resources(?string $type = null): array
+    {
+        return self::listOf($this->connector->get($this->path().'resources/', ['resource_type' => $type]), LogResource::fromArray(...));
     }
 
     private function path(): string
