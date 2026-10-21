@@ -6,6 +6,8 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0-RC3] - 2026-10-21
+
 ### Added
 
 - The rest of GlitchTip's management API, so every operation in its OpenAPI
@@ -68,6 +70,7 @@ All notable changes to this package are documented here. The format follows
 - Retries for idempotent requests on connection failures, 429 and 5xx gateway
   responses.
 
-[Unreleased]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC2...HEAD
+[Unreleased]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC3...HEAD
+[1.0.0-RC3]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC2...v1.0.0-RC3
 [1.0.0-RC2]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC1...v1.0.0-RC2
 [1.0.0-RC1]: https://github.com/wojt-janowski/laravel-glitchtip/releases/tag/v1.0.0-RC1
