@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace WojtJanowski\GlitchTip;
 
+use InvalidArgumentException;
 use WojtJanowski\GlitchTip\Data\ServerInfo;
 use WojtJanowski\GlitchTip\Resources\Alerts;
 use WojtJanowski\GlitchTip\Resources\Comments;
@@ -28,6 +29,23 @@ final readonly class GlitchTip
     ) {}
 
     /**
+     * A separate client for another GlitchTip account. It leaves config and
+     * this client untouched, so clients for several accounts can be used side
+     * by side. The default organization is not carried over, because it
+     * belongs to the configured account.
+     *
+     * @param  string  $url  the instance base URL, e.g. https://app.glitchtip.com
+     */
+    public function using(string $url, string $token, ?string $organization = null): self
+    {
+        if (trim($url) === '' || trim($token) === '') {
+            throw new InvalidArgumentException('A GlitchTip account needs a URL and an API token.');
+        }
+
+        return new self($this->connector->withCredentials($url, $token), $organization);
+    }
+
+    /**
      * A client scoped to another organization slug.
      */
     public function forOrganization(string $organization): self
@@ -38,6 +56,14 @@ final readonly class GlitchTip
     public function organizationSlug(): ?string
     {
         return $this->organization;
+    }
+
+    /**
+     * The base URL of the instance this client talks to.
+     */
+    public function url(): string
+    {
+        return $this->connector->url();
     }
 
     /**

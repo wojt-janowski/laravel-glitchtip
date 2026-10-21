@@ -33,6 +33,28 @@ final readonly class Connector
     ) {}
 
     /**
+     * A connector for another server and token that keeps this one's HTTP
+     * client, timeouts and retry settings.
+     */
+    public function withCredentials(string $url, string $token): self
+    {
+        return new self(
+            http: $this->http,
+            url: $url,
+            token: $token,
+            timeout: $this->timeout,
+            connectTimeout: $this->connectTimeout,
+            retryTimes: $this->retryTimes,
+            retrySleepMilliseconds: $this->retrySleepMilliseconds,
+        );
+    }
+
+    public function url(): string
+    {
+        return rtrim($this->url, '/');
+    }
+
+    /**
      * @param  array<string, mixed>  $query
      */
     public function get(string $path, array $query = []): Response
