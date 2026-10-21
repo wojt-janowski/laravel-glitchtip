@@ -514,7 +514,7 @@ GLITCHTIP_INTEGRATION_ORGANIZATION=acme \
 composer test -- tests/Integration
 ```
 
-The token needs write scopes. The suite briefly changes the token user's display options and restores them. It doesn't send notifications or emails. Set `GLITCHTIP_INTEGRATION_UNDELETABLE=1` to also create a status page and a repository; the API can't delete those, so the run prints them for you to remove by hand.
+The token needs write scopes. The suite briefly changes the token user's display options and restores them. It doesn't send notifications or emails. Set `GLITCHTIP_INTEGRATION_UNDELETABLE=1` to also create a status page and a repository. Neither the API nor GlitchTip's normal interface can delete those, so the run prints their names. Remove them as a superuser in Django's admin, at `/admin/uptime/statuspage/` and `/admin/sourcecode/repository/`.
 
 ## License
 
