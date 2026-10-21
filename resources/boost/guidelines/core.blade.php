@@ -63,6 +63,24 @@ $client->issues()->list(query: 'is:unresolved');
 </code-snippet>
 @endverbatim
 
+- Administration covers members, teams, projects and client keys, organization SSO, users, billing, stats and chunked uploads:
+
+@verbatim
+<code-snippet name="Administration" lang="php">
+use WojtJanowski\GlitchTip\Data\ProjectInput;
+use WojtJanowski\GlitchTip\Enums\MemberRole;
+
+GlitchTip::members()->invite('dev@example.com', MemberRole::Member, teams: ['platform']);
+$project = GlitchTip::projects()->create('platform', new ProjectInput(name: 'Backend', platform: 'php-laravel'));
+$dsn = GlitchTip::projects()->createKey('backend', 'Mobile')->dsn;
+
+$file = GlitchTip::uploads()->upload($bundleZip);
+GlitchTip::uploads()->assembleArtifactBundle($file, projects: ['web'], version: 'web@2.0.0');
+</code-snippet>
+@endverbatim
+
+- Before adding an endpoint, check `tests/Fixtures/coverage.php`: every GlitchTip operation already maps to a method, an alias or a documented exclusion.
+
 ### Configuration
 
 Set `GLITCHTIP_TOKEN`, `GLITCHTIP_ORGANIZATION` and, for self-hosted installs, `GLITCHTIP_URL`. Publish with `php artisan vendor:publish --tag=glitchtip-config`.

@@ -41,6 +41,23 @@
 - Issue `count` is a string in the API, so DTOs cast it.
 - Release versions can contain `/` and `@`, so every path segment is
   `rawurlencode`d.
+- Multipart uploads must not call `asJson()`: its Content-Type header
+  overrides the multipart boundary. `Connector::postFiles()` handles this.
+- Chunk uploads go to `file_gzip`, each part gzipped and named by the SHA-1
+  of its uncompressed content; GlitchTip verifies the name.
+- A few endpoints need no token (`/api/settings/`, heartbeats, invitation
+  lookups, wizard start); use `getPublic()`/`postPublic()` for them.
+- User endpoints only act on the token's own user; default to `'me'`.
+
+## API Coverage
+
+`tests/Fixtures/openapi.json` is GlitchTip's spec, and
+`tests/Fixtures/coverage.php` maps every operation in it to a client call, an
+alias or an exclusion with a reason. `CoverageTest` fails when an operation is
+unmapped and checks each call's HTTP method and path. When GlitchTip adds
+endpoints, run `composer spec`, then implement or exclude each new operation.
+Exclude only what an API token cannot use or what is not management (DSN
+ingest, browser widgets, no-ops), and give the reason.
 
 ## Conventions
 

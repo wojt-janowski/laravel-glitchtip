@@ -6,6 +6,39 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The rest of GlitchTip's management API, so every operation in its OpenAPI
+  spec is either implemented or excluded with a stated reason:
+  - `instance()`: whoami with token scopes, login providers, license and
+    support link.
+  - `members()`: list, invite, update roles and teams, remove, transfer
+    ownership, and look up or accept invitations.
+  - `socialApps()` (organization SSO), `users()` (profile, emails,
+    notifications, recovery codes), `billing()` (Stripe plans, usage,
+    checkout, portal, overage), `repositories()`, `stats()` (event volume
+    over time) and `wizard()` (sentry-wizard handshake).
+  - `uploads()`: chunked uploads plus assembly of artifact bundles, release
+    artifacts and debug files, and ProGuard mapping uploads.
+  - Organizations: create, update, delete, import. Projects: create, update,
+    delete, client key management, per-project alert preferences. Teams:
+    create, update, delete, membership and project access. Environments:
+    per-project listing and hiding.
+  - Issues: per-project bulk update, stats, and hash listing and deletion
+    (unmerge). Releases: project-scoped create, get, update and delete,
+    files, commits, assembly. Monitors: heartbeats and status pages. Alerts:
+    test notifications. Logs: resources.
+- `tests/Fixtures/coverage.php` with a test that maps every operation in the
+  spec to a client call, an alias or a documented exclusion, and checks each
+  call's method and path.
+
+### Changed
+
+- `GlitchTip::server()` and the other endpoints that need no token
+  (heartbeats, invitation lookups, login providers) now work without one.
+- `Resources\Server` is now `Resources\Instance`. `GlitchTip::server()` is
+  unchanged.
+
 ## [1.0.0-RC2] - 2026-10-21
 
 ### Added
