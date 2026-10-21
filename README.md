@@ -1,6 +1,6 @@
 # laravel-glitchtip
 
-A typed Laravel client for the [GlitchTip](https://glitchtip.com) error-tracking API. It covers issues, events, comments, releases and deploys, uptime monitors, alerts, logs and performance data, and works with the hosted service or a self-hosted install.
+A typed Laravel client for the [GlitchTip](https://glitchtip.com) error-tracking API. It covers the whole management API: issues and events, releases and source maps, uptime monitors, alerts, logs and performance data, plus organizations, members, teams, projects, users and billing. It works with the hosted service or a self-hosted install.
 
 ## Features
 
@@ -8,7 +8,10 @@ A typed Laravel client for the [GlitchTip](https://glitchtip.com) error-tracking
 - Cursor pagination over GlitchTip's `Link` header, with `lazy()` iteration across pages
 - Issue triage: resolve, ignore, assign, resolve in a release, merge, and bulk update or delete
 - Release and deploy tracking for CI and deploy scripts
-- Uptime monitors, project alerts, logs, transaction groups, span groups and N+1 detection
+- Uptime monitors, heartbeats, status pages, project alerts, logs, transaction groups, span groups and N+1 detection
+- Administration: organizations, members and invitations, teams, projects and client keys, single sign-on, users and billing
+- Chunked uploads for source map bundles, release artifacts and debug files, the way sentry-cli does them
+- Every operation in GlitchTip's OpenAPI spec is either implemented or excluded with a stated reason, and a test enforces it (see [API coverage](#api-coverage))
 - Retries on connection failures, 429 and 5xx gateway responses for idempotent requests only, so a POST is never duplicated
 - A single `RequestFailedException` that carries GlitchTip's error detail
 - Testable with `Http::fake()`
@@ -140,6 +143,20 @@ Bulk updates and deletes take an `IssueFilter`. GlitchTip applies a bulk call wi
 GlitchTip::issues()->bulkUpdate(IssueFilter::ids([42, 43]), IssueUpdate::ignored());
 GlitchTip::issues()->bulkUpdate(new IssueFilter(query: 'is:unresolved', projects: [7]), IssueUpdate::merged());
 GlitchTip::issues()->bulkDelete(IssueFilter::ids([42]));
+
+// One project. Without ids, only a status change is allowed, applied to unresolved issues (or $scope).
+GlitchTip::issues()->bulkUpdateForProject('backend', IssueFilter::everything(), IssueUpdate::resolved());
+```
+
+Issue stats and unmerging:
+
+```php
+use WojtJanowski\GlitchTip\Enums\IssueStatsPeriod;
+
+GlitchTip::issues()->stats([42, 43], IssueStatsPeriod::TwoWeeks);   // [timestamp, count] series per issue
+
+$hashes = GlitchTip::issues()->hashes(42);                           // fingerprints grouped into the issue
+GlitchTip::issues()->deleteHashes(42, [$hashes->items[1]->id]);      // split them back out
 ```
 
 ### Events
@@ -178,7 +195,37 @@ GlitchTip::releases()->list(project: 'backend');
 GlitchTip::releases()->deploys('api@1.4.0');
 ```
 
-Versions that contain `/` or `@` are encoded for you.
+Versions that contain `/` or `@` are encoded for you. Pass `project:` to `get()`, `update()`, `delete()`, `finalize()` and `files()` to work with a release inside one project, or create one there directly:
+
+```php
+use WojtJanowski\GlitchTip\Data\Commit;
+
+GlitchTip::releases()->createForProject('backend', 'api@1.4.0');
+GlitchTip::releases()->get('api@1.4.0', project: 'backend');
+
+GlitchTip::releases()->setCommits('api@1.4.0', [new Commit(id: $sha, message: 'Fix checkout', authorEmail: 'dev@example.com')]);   // replaces the list
+GlitchTip::releases()->commits('api@1.4.0');
+
+GlitchTip::releases()->files('api@1.4.0');
+GlitchTip::releases()->deleteFile('api@1.4.0', $fileId);
+```
+
+### Source maps and debug files
+
+Uploads work the way sentry-cli does them. `upload()` sends a file in gzipped chunks sized to the server's limits, and an assemble call then turns the chunks into an artifact. Repeat the assemble call until `needsChunks()` is false:
+
+```php
+$file = GlitchTip::uploads()->upload(file_get_contents('build/artifact-bundle.zip'));
+
+$status = GlitchTip::uploads()->assembleArtifactBundle($file, projects: ['web'], version: 'web@2.0.0');
+$status->state;          // "created", "ok", "not_found" or "error"
+$status->needsChunks();
+
+GlitchTip::releases()->assemble('web@2.0.0', $file);                        // legacy release artifacts
+GlitchTip::uploads()->assembleDebugFile('ios', $file, 'App.dSYM', $debugId); // dSYM, ELF, PDB, ProGuard
+GlitchTip::uploads()->debugFiles('ios');
+GlitchTip::uploads()->uploadProguardMappings('android', file_get_contents('mappings.zip'));
+```
 
 ### Uptime monitors
 
@@ -200,6 +247,15 @@ GlitchTip::monitors()->list();
 GlitchTip::monitors()->delete($monitor->id);
 ```
 
+Heartbeat monitors expect a ping from your job. `heartbeat()` needs no API token, only the monitor's endpoint id:
+
+```php
+GlitchTip::monitors()->heartbeat($monitor->endpointId);
+
+GlitchTip::monitors()->createStatusPage('Acme status', public: true);
+GlitchTip::monitors()->statusPages();
+```
+
 ### Alerts
 
 ```php
@@ -213,6 +269,7 @@ GlitchTip::alerts()->create('backend', new AlertInput(
 ));
 
 GlitchTip::alerts()->list('backend');
+GlitchTip::alerts()->test('backend', $alert->id);   // sends a test notification; returns a result per recipient
 ```
 
 ### Logs
@@ -221,6 +278,7 @@ GlitchTip::alerts()->list('backend');
 GlitchTip::logs()->list(levels: ['error'], service: 'api', start: now()->subHour());
 GlitchTip::logs()->get($logId);
 GlitchTip::logs()->stats(projects: [7], start: now()->subDay())->series;   // ['error' => [...], 'info' => [...]]
+GlitchTip::logs()->resources('service');   // known services, environments or hosts, for filters
 ```
 
 ### Performance
@@ -248,17 +306,134 @@ $server->versionAtLeast('7.0.0');   // pre-releases count, so "7.0.0rc2" passes
 $server->hasFeature('logs');        // also 'uptime', 'mcp', 'email'
 ```
 
+### Instance and credentials
+
+```php
+$auth = GlitchTip::instance()->whoami();
+$auth->user?->email;
+$auth->hasScope('event:write');
+
+GlitchTip::instance()->loginProviders();   // SSO options on the organization's login page; no token needed
+GlitchTip::instance()->license();
+GlitchTip::instance()->supportLink();
+```
+
+### Event volume
+
+```php
+use WojtJanowski\GlitchTip\Enums\StatsCategory;
+use WojtJanowski\GlitchTip\Enums\StatsInterval;
+
+$series = GlitchTip::stats()->series(now()->subWeek(), now(), StatsCategory::Error, interval: StatsInterval::Day);
+$series->toMap();   // ['2026-10-14T00:00:00+00:00' => 120, ...]
+```
+
+### Organizations, teams and projects
+
+```php
+use WojtJanowski\GlitchTip\Data\ProjectInput;
+
+GlitchTip::organizations()->create('Acme');
+GlitchTip::organizations()->update('Acme Inc');
+GlitchTip::organizations()->import('https://sentry.example.com', $sourceToken);   // copy projects, teams and members
+
+GlitchTip::teams()->create('platform');
+GlitchTip::teams()->addMember('platform', $memberId);
+GlitchTip::teams()->addToProject('platform', 'backend');
+
+$project = GlitchTip::projects()->create('platform', new ProjectInput(name: 'Backend', platform: 'php-laravel'));
+GlitchTip::projects()->update('backend', new ProjectInput(name: 'Backend API'));
+
+$key = GlitchTip::projects()->createKey('backend', 'Mobile', rateLimitWindow: 60, rateLimitCount: 1000);
+$key->dsn;
+GlitchTip::projects()->deleteKey('backend', $key->id);
+
+GlitchTip::environments()->forProject('backend');
+GlitchTip::environments()->hide('backend', 'staging');
+```
+
+The `delete()` methods on organizations, teams and projects remove all of their data. GlitchTip doesn't ask for confirmation.
+
+### Members and invitations
+
+```php
+use WojtJanowski\GlitchTip\Enums\MemberRole;
+
+$member = GlitchTip::members()->invite('dev@example.com', MemberRole::Member, teams: ['platform']);
+$member->inviteLink;    // share it yourself with sendEmail: false
+
+GlitchTip::members()->update($member->id, MemberRole::Admin, teams: ['platform' => 'admin']);
+GlitchTip::members()->makeOwner($member->id);
+GlitchTip::members()->forTeam('platform');
+
+// The invitee's side, from the link's member id and token:
+GlitchTip::members()->invitation($memberId, $token);   // no token needed
+GlitchTip::members()->acceptInvitation($memberId, $token);
+```
+
+### Single sign-on
+
+```php
+GlitchTip::socialApps()->create('Okta', clientId: $id, clientSecret: $secret, serverUrl: 'https://acme.okta.com');
+GlitchTip::socialApps()->list();
+```
+
+### Users
+
+GlitchTip lets a token manage only its own user, so these methods default to `'me'`:
+
+```php
+use WojtJanowski\GlitchTip\Data\UserOptions;
+
+GlitchTip::users()->get();
+GlitchTip::users()->update(new UserOptions(timezone: 'Australia/Sydney', clock24Hours: true), name: 'Wojt');
+
+GlitchTip::users()->addEmail('me@work.example');
+GlitchTip::users()->makeEmailPrimary('me@work.example');
+GlitchTip::users()->updateNotifications(subscribeByDefault: false);
+GlitchTip::projects()->updateAlertPreferences([7 => 1, 9 => 0]);   // per project: -1 default, 0 off, 1 on
+```
+
+### Billing
+
+Billing is available only where Stripe billing is enabled, such as app.glitchtip.com. Self-hosted instances return 404:
+
+```php
+GlitchTip::billing()->subscription()?->status;
+GlitchTip::billing()->usage()->total;
+GlitchTip::billing()->checkout($priceId);     // Stripe Checkout URL
+GlitchTip::billing()->portal();               // Stripe customer portal URL
+GlitchTip::billing()->configureOverage(true, capCents: 5000);
+```
+
 ### Other resources
 
 ```php
 GlitchTip::organizations()->list();
-GlitchTip::organizations()->get();
 GlitchTip::projects()->list();
-GlitchTip::projects()->get('backend');
 GlitchTip::projects()->keys('backend')->items[0]->dsn;
 GlitchTip::teams()->list();
 GlitchTip::environments()->list();
+GlitchTip::repositories()->create('acme/backend', 'https://github.com/acme/backend');
+GlitchTip::wizard()->authorize($hash);   // complete a sentry-wizard handshake
 ```
+
+## API coverage
+
+`tests/Fixtures/coverage.php` maps every operation in GlitchTip's OpenAPI spec (`tests/Fixtures/openapi.json`) to one of three things:
+
+- **A client call.** The test suite runs it and checks the request uses exactly the operation's HTTP method and path.
+- **An alias.** Some operations are duplicate routes, for example the organization-scoped copies of the issue, event and comment endpoints. The client reaches the same data through the other route.
+- **An exclusion, with the reason.**
+
+The suite fails if any operation in the spec isn't accounted for. Eight operations are excluded:
+
+| Operations | Why |
+|---|---|
+| API tokens: list, create, delete | Accept only browser-session login; an API token can't call them |
+| Event store, CSP security reports | Event ingest, authenticated by a project DSN. Send events with a Sentry SDK |
+| Embedded error page (GET, POST) | The browser crash-report dialog, keyed by DSN |
+| Project reprocessing | A documented no-op that exists only so `sentry-cli upload-dif` succeeds |
 
 ## Error handling
 
