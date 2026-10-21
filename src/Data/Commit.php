@@ -32,4 +32,19 @@ final readonly class Commit
             dateCreated: $a->nullableDate('dateCreated'),
         );
     }
+
+    /**
+     * The commit as GlitchTip accepts it when setting a release's commits.
+     *
+     * @return array<string, string>
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'message' => $this->message ?? '',
+            'authorName' => $this->authorName ?? '',
+            'authorEmail' => $this->authorEmail ?? '',
+        ];
+    }
 }
