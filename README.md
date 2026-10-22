@@ -18,7 +18,7 @@ A typed Laravel client for the [GlitchTip](https://glitchtip.com) error-tracking
 
 ## Requirements
 
-- PHP 8.5+
+- PHP 8.4+
 - Laravel 13+
 
 ## Installation

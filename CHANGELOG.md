@@ -6,6 +6,10 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- PHP 8.4 is now supported alongside 8.5, and CI tests both.
+
 ## [1.0.0] - 2026-10-21
 
 ### Added

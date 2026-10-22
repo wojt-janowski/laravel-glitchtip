@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - **Type**: Laravel package (library), a typed client for the GlitchTip REST API
-- **PHP**: 8.5+ with strict_types
+- **PHP**: 8.4+ with strict_types
 - **Laravel**: 13+
 - **Namespace**: `WojtJanowski\GlitchTip\`
 - **API reference**: https://app.glitchtip.com/api/docs (OpenAPI at `/api/openapi.json`)
