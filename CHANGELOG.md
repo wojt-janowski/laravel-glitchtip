@@ -6,6 +6,8 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-23
+
 ### Changed
 
 - PHP 8.4 is now supported alongside 8.5, and CI tests both.
@@ -111,7 +113,8 @@ All notable changes to this package are documented here. The format follows
 - Retries for idempotent requests on connection failures, 429 and 5xx gateway
   responses.
 
-[Unreleased]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC3...v1.0.0
 [1.0.0-RC3]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC2...v1.0.0-RC3
 [1.0.0-RC2]: https://github.com/wojt-janowski/laravel-glitchtip/compare/v1.0.0-RC1...v1.0.0-RC2
